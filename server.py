@@ -24,6 +24,8 @@ class Server(object):
 
     def add_client(self, name, sock):
         # Warning: not thread safe
+        if len(name) == 0:
+            raise ServerException("Name is empty")
         if '|' in name or ' ' in name:
             raise ServerException("Name cannot contains '|' or spaces")
         if name in self.clients:
@@ -90,7 +92,7 @@ class ClientHandler(threading.Thread):
 
     def main_loop(self):
         cmd = self.recv_cmd()
-        while cmd != 'bye':
+        while cmd and cmd != 'bye':  # make sure cmd isn't empty
             if cmd.startswith("get"):
                 if cmd == "get clients":
                     res = self.get_clients()
@@ -145,7 +147,7 @@ class ClientHandler(threading.Thread):
         self.server.add_message(self.client_name, to, msg)
 
     def cleanup(self):
-        if self.client_name is not None:
+        if self.client_name:
             self.server.remove_client(self.client_name)
             print "{name} has left".format(name=self.client_name)
         else:

@@ -41,9 +41,10 @@ class Client(object):
         return messages
 
     def disconnect(self):
-        self.sock.send("bye")
-        self.sock.shutdown(socket.SHUT_RDWR)  # releases resources
-        self.sock.close()
+        if self.sock:
+            self.sock.send("bye")
+            self.sock.shutdown(socket.SHUT_RDWR)  # releases resources
+            self.sock.close()
 
 
 class ClientUI(object):
@@ -56,19 +57,25 @@ class ClientUI(object):
         """
         self.client = client
 
-    @staticmethod
-    def print_welcome_message():
-        print "Welcome to Axon Chat Room!"
-
     def connect_to_server(self):
-        self.client.connect(SERVER_IP, SERVER_PORT)
-        name = raw_input("Please Enter your name: ")
-        server_response = self.client.try_name(name)
-        while server_response != SUCCESS:
-            print "Error:", server_response
-            name = raw_input("Please Enter another name: ")
+        """
+        trying to connect to the server
+        :return: bool is connected successfully
+        """
+        try:
+            self.client.connect(SERVER_IP, SERVER_PORT)
+            print "Welcome to Axon Chat Room!"
+            name = raw_input("Please Enter your name: ")
             server_response = self.client.try_name(name)
-        print "Hello", name
+            while server_response != SUCCESS:
+                print "Error:", server_response
+                name = raw_input("Please Enter another name: ")
+                server_response = self.client.try_name(name)
+            print "Hello", name
+            return True
+        except socket.error as e:
+            print "Error:", e
+            return False
 
     @staticmethod
     def print_menu():
@@ -101,32 +108,32 @@ class ClientUI(object):
             for msg in msgs:
                 print "{sender}: {msg}".format(sender=sender, msg=msg.replace("\n", "\n    "))
 
-    def exit(self):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         """
         Disconnect gracefully
         """
         self.client.disconnect()
 
     def main_loop(self):
-        self.print_menu()
-        cmd = raw_input("Enter your command: ")
-        while cmd.lower() != 'x':
-            if cmd.lower() == 's':
-                self.send_pm()
-            elif cmd.lower() == 'r':
-                self.print_messages()
+        try:
             self.print_menu()
             cmd = raw_input("Enter your command: ")
-        self.exit()
+            while cmd.lower() != 'x':
+                if cmd.lower() == 's':
+                    self.send_pm()
+                elif cmd.lower() == 'r':
+                    self.print_messages()
+                self.print_menu()
+                cmd = raw_input("Enter your command: ")
+        except socket.error as e:
+            print "Error:", e
 
 
 def main():
     client = Client()
     handler = ClientUI(client)
-    handler.print_welcome_message()
-    handler.connect_to_server()
-    handler.main_loop()
-
+    if handler.connect_to_server():
+        handler.main_loop()
 
 if __name__ == '__main__':
     main()
