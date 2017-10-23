@@ -2,11 +2,11 @@
 
 **protocol**
 1. client connect to the server and send his name
-  * '|' and spaces are not allowed
-  * name must be unique
-  * name cannot be empty string
+    * '|' and spaces are not allowed
+    * name must be unique
+    * name cannot be empty string
 2. In case of error, server send error message and disconnect,
-   otherwise server send "SUCCESS"
+   otherwise server send "SUCCESS".
 
 Then client can send these commands to the server:
 * "get clients"
