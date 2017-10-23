@@ -37,6 +37,9 @@ class Server(object):
     def get_messages(self, name):
         return self.messages.get(name)
 
+    def clear_messages(self, name):
+        self.messages[name] = {}
+
     def add_message(self, source, dest, msg):
         if dest not in self.messages:
             self.messages[dest] = {}
@@ -125,6 +128,7 @@ class ClientHandler(threading.Thread):
 
     def get_messages(self):
         messages = self.server.get_messages(self.client_name)
+        self.server.clear_messages(self.client_name)
         if not messages:  # None or with length 0
             return EMPTY
         messages = ["{sender} {msg}".format(sender=sender, msg=msg) for sender, msgs in messages.items() for msg in msgs]
